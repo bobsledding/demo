@@ -1,0 +1,140 @@
+version: '3'
+
+networks:
+  starving:
+    driver: bridge
+
+volumes:
+  mongo:
+    driver: ${VOLUMES_DRIVER}
+services:
+
+  ### NGINX Server #########################################
+  nginx:
+    restart: always
+    build:
+      context: ./nginx
+      args:
+        - PHP_VERSION=${PHP_VERSION}
+        - CHANGE_SOURCE=${CHANGE_SOURCE}
+        - PHP_UPSTREAM_CONTAINER=${NGINX_PHP_UPSTREAM_CONTAINER}
+        - PHP_UPSTREAM_PORT=${NGINX_PHP_UPSTREAM_PORT}
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    volumes:
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+      - ${NGINX_HOST_LOG_PATH}:/var/log/nginx
+      - ${NGINX_SITES_PATH}:/etc/nginx/sites-available
+      - ${NGINX_SSL_PATH}:/etc/nginx/ssl
+    ports:
+      - "${NGINX_HOST_HTTP_PORT}:80"
+      - "${NGINX_HOST_HTTPS_PORT}:443"
+    depends_on:
+      - php-fpm
+    networks:
+      - starving
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  ### PHP-FPM ##############################################
+  php-fpm:
+    restart: always
+    build:
+      context: ./php-fpm
+      args:
+        - CHANGE_SOURCE=${CHANGE_SOURCE}
+        - BASE_IMAGE_TAG_PREFIX=${PHP_FPM_BASE_IMAGE_TAG_PREFIX}
+        - PHP_VERSION=${PHP_VERSION}
+        - INSTALL_XDEBUG=${PHP_FPM_INSTALL_XDEBUG}
+        - XDEBUG_PORT=${PHP_FPM_XDEBUG_PORT}
+        - INSTALL_MONGO=${PHP_FPM_INSTALL_MONGO}
+        - INSTALL_OPCACHE=${PHP_FPM_INSTALL_OPCACHE}
+        - INSTALL_BCMATH=${PHP_FPM_INSTALL_BCMATH}
+        - INSTALL_INTL=${PHP_FPM_INSTALL_INTL}
+        - INSTALL_IMAGE_OPTIMIZERS=${PHP_FPM_INSTALL_IMAGE_OPTIMIZERS}
+        - INSTALL_IMAGEMAGICK=${PHP_FPM_INSTALL_IMAGEMAGICK}
+        - PUID=${PHP_FPM_PUID}
+        - PGID=${PHP_FPM_PGID}
+        - IMAGEMAGICK_VERSION=${PHP_FPM_IMAGEMAGICK_VERSION}
+        - LOCALE=${PHP_FPM_DEFAULT_LOCALE}
+        - INSTALL_DNSUTILS=${PHP_FPM_INSTALL_DNSUTILS}
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    volumes:
+      - ./php-fpm/php${PHP_VERSION}.ini:/usr/local/etc/php/php.ini
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+    expose:
+      - "9000"
+    environment:
+      - TZ=${WORKSPACE_TIMEZONE}
+    depends_on:
+      - workspace
+    networks:
+      - starving
+
+  ### Workspace Utilities ##################################
+  workspace:
+    restart: always
+    build:
+      context: ./workspace
+      args:
+        - CHANGE_SOURCE=${CHANGE_SOURCE}
+        - PHP_VERSION=${PHP_VERSION}
+        - INSTALL_XDEBUG=${WORKSPACE_INSTALL_XDEBUG}
+        - XDEBUG_PORT=${WORKSPACE_XDEBUG_PORT}
+        - INSTALL_MONGO=${WORKSPACE_INSTALL_MONGO}
+        - NVM_NODEJS_ORG_MIRROR=${WORKSPACE_NVM_NODEJS_ORG_MIRROR}
+        - INSTALL_NODE=${WORKSPACE_INSTALL_NODE}
+        - NPM_REGISTRY=${WORKSPACE_NPM_REGISTRY}
+        - NPM_FETCH_RETRIES=${WORKSPACE_NPM_FETCH_RETRIES}
+        - NPM_FETCH_RETRY_FACTOR=${WORKSPACE_NPM_FETCH_RETRY_FACTOR}
+        - NPM_FETCH_RETRY_MINTIMEOUT=${WORKSPACE_NPM_FETCH_RETRY_MINTIMEOUT}
+        - NPM_FETCH_RETRY_MAXTIMEOUT=${WORKSPACE_NPM_FETCH_RETRY_MAXTIMEOUT}
+        - INSTALL_YARN=${WORKSPACE_INSTALL_YARN}
+        - INSTALL_NPM_GULP=${WORKSPACE_INSTALL_NPM_GULP}
+        - INSTALL_NPM_VUE_CLI=${WORKSPACE_INSTALL_NPM_VUE_CLI}
+        - COMPOSER_GLOBAL_INSTALL=${WORKSPACE_COMPOSER_GLOBAL_INSTALL}
+        - COMPOSER_VERSION=${WORKSPACE_COMPOSER_VERSION}
+        - COMPOSER_AUTH_JSON=${WORKSPACE_COMPOSER_AUTH_JSON}
+        - COMPOSER_REPO_PACKAGIST=${WORKSPACE_COMPOSER_REPO_PACKAGIST}
+        - INSTALL_LARAVEL_INSTALLER=${WORKSPACE_INSTALL_LARAVEL_INSTALLER}
+        - INSTALL_AST=${WORKSPACE_INSTALL_AST}
+        - AST_VERSION=${WORKSPACE_AST_VERSION}
+        - PUID=${WORKSPACE_PUID}
+        - PGID=${WORKSPACE_PGID}
+        - NODE_VERSION=${WORKSPACE_NODE_VERSION}
+        - YARN_VERSION=${WORKSPACE_YARN_VERSION}
+        - TZ=${WORKSPACE_TIMEZONE}
+        - INSTALL_MEMCACHED=${WORKSPACE_INSTALL_MEMCACHED}
+        - INSTALL_DNSUTILS=${WORKSPACE_INSTALL_DNSUTILS}
+        - INSTALL_JDK=${WORKSPACE_INSTALL_JDK}
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    volumes:
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+    ports:
+      - "${WORKSPACE_SSH_PORT}:22"
+      - "${WORKSPACE_VUE_CLI_SERVE_HOST_PORT}:8080"
+      - "${WORKSPACE_VUE_CLI_UI_HOST_PORT}:8000"
+      - "${WORKSPACE_VITE_PORT}:5173"
+    tty: true
+    networks:
+      - starving
+
+  ### MongoDB ##############################################
+  mongo:
+    restart: always
+    build: ./mongo
+    ports:
+      - "${MONGODB_PORT}:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    volumes:
+      - ${DATA_PATH_HOST}/mongo:/data/db
+      - ${DATA_PATH_HOST}/mongo_config:/data/configdb
+    networks:
+      - starving

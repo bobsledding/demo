@@ -1,0 +1,2 @@
+# 每分鐘執行 Laravel 排程（暫時關閉）
+# * * * * * php /var/www/artisan schedule:run >> /dev/null 2>&1
