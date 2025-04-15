@@ -29,3 +29,5 @@ public_html/hot
 public_html/storage
 storage/*.key
 yarn-error.log
+docker/ecr_push.sh
+docker/.env.prod

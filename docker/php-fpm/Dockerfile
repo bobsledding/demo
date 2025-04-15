@@ -320,7 +320,8 @@ ENV PGID ${PGID}
 
 RUN groupmod -o -g ${PGID} www-data && \
   usermod -o -u ${PUID} -g www-data www-data
-
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
+  && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 # Adding the faketime library to the preload file needs to be done last
 # otherwise it will preload it for all commands that follow in this file
 RUN if [ ${INSTALL_FAKETIME} = true ]; then \
