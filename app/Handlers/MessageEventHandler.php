@@ -23,8 +23,7 @@ class MessageEventHandler implements LineEventHandlerInterface
         protected LLMModeRepository $repository,
         protected UserMemoryService $memoryService,
         protected RateLimiterService $rateLimiterService,
-    ) {
-    }
+    ) {}
 
     public function handle(LineEvent $event): void
     {
