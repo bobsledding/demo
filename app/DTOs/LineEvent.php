@@ -21,7 +21,8 @@ class LineEvent
         public readonly ?string $text,
         public readonly ?string $replyToken,
         public readonly ?string $postbackData,
-    ) {}
+    ) {
+    }
 
     public static function from(array $event): self
     {

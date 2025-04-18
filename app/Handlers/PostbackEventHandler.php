@@ -16,7 +16,8 @@ class PostbackEventHandler implements LineEventHandlerInterface
     public function __construct(
         protected MessagingApiApi $lineBot,
         protected LLMModeRepository $repository
-    ) {}
+    ) {
+    }
 
     public function handle(LineEvent $event): void
     {
