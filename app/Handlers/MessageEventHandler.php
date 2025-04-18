@@ -5,6 +5,7 @@ namespace App\Handlers;
 use App\Contracts\LineEventHandlerInterface;
 use App\DTOs\LineEvent;
 use App\Services\UserMemoryService;
+use App\Services\RateLimiterService;
 use App\Factories\LLMServiceFactory;
 use App\Traits\ReplyTextTrait;
 use LINE\Clients\MessagingApi\Api\MessagingApiApi;
@@ -21,10 +22,15 @@ class MessageEventHandler implements LineEventHandlerInterface
         protected MessagingApiBlobApi $lineBlob,
         protected LLMModeRepository $repository,
         protected UserMemoryService $memoryService,
+        protected RateLimiterService $rateLimiterService,
     ) {}
 
     public function handle(LineEvent $event): void
     {
+        if (! $this->rateLimiterService->hit($event->userId)) {
+            $this->replyText($event->replyToken, '請稍後再試');
+            return;
+        }
         $mode = $this->repository->getMode($event->userId);
         $llm = LLMServiceFactory::make($mode);
         $reply = '';
