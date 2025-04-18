@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Cache;
 class UserMemoryService
 {
     public const MAX_HISTORY = 10;
-    private const CACHE_PREFIX = 'line-user-history-';
+    protected const CACHE_PREFIX = 'line-user-history-';
 
     public function getHistory(string $userId): array
     {

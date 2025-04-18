@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\DTOs\LineEvent;
+use App\Enums\LLMMode;
 use Illuminate\Console\Command;
 use App\Factories\LineClientFactory;
 use GuzzleHttp\Client;
@@ -32,9 +34,9 @@ class InitLineMenuCommand extends Command
                         'height' => 843
                     ],
                     'action' => [
-                        'type' => 'postback',
+                        'type' => LineEvent::TYPE_POSTBACK,
                         'label' => 'OpenAI',
-                        'data' => 'openai', // <<< 改這裡
+                        'data' => LLMMode::OPENAI->value,
                     ]
                 ],
                 [
@@ -45,9 +47,9 @@ class InitLineMenuCommand extends Command
                         'height' => 843
                     ],
                     'action' => [
-                        'type' => 'postback',
+                        'type' => LineEvent::TYPE_POSTBACK,
                         'label' => 'Gemini',
-                        'data' => 'gemini', // <<< 改這裡
+                        'data' => LLMMode::GEMINI->value,
                     ]
                 ]
             ]
