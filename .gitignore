@@ -31,3 +31,4 @@ storage/*.key
 yarn-error.log
 docker/ecr_push.sh
 docker/.env.prod
+.php-cs-fixer.cache
